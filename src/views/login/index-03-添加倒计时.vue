@@ -95,7 +95,7 @@ export default {
   },
   methods: {
     // 得到服务器中的验证码
-    async getCode () {
+    getCode () {
       // 判断是否处于倒计时
       if (this.isback) {
         // 说明正倒计时
@@ -116,18 +116,28 @@ export default {
           this.time = 5
         }
       }, 1000)
-
       // 校验手机号是否合法
-      await this.$refs.myform.validate('mobile')
-      // 添加加载动画
-      this.$toast.loading({
-        duration: 0, // 一直显示
-        message: '加载中', // 加载的文本
-        forbidClick: true // 禁止点击背景
-      })
-      const resCode = await apiGetCode(this.use.mobile)
-      console.log(resCode)
-      this.$toast.success(resCode.data)
+      this.$refs.myform
+        .validate('mobile')
+        .then(() => {
+          console.log('then')
+          // 添加加载动画
+          this.$toast.loading({
+            duration: 0, // 一直显示
+            message: '加载中', // 加载的文本
+            forbidClick: true // 禁止点击背景
+          })
+          apiGetCode(this.use.mobile).then(res => {
+            console.log(res)
+            // 提示验证码
+            this.$toast.success(res.data)
+          })
+        })
+        .catch(error => {
+          console.log('catch')
+          // 打印校验的信息
+          this.$toast.fail(error.message)
+        })
     }
   }
 }

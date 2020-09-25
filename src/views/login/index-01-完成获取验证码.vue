@@ -30,9 +30,7 @@
           placeholder="请输入验证码"
         >
           <template #button>
-            <span @click="getCode" class="mycolor">
-              {{ isback ? time + 'S后重新发送' : '获取验证码' }}
-            </span>
+            <span @click="getCode" class="mycolor">获取验证码</span>
           </template>
           <template #left-icon>
             <i class="iconfont iconyanzhengma"></i>
@@ -56,8 +54,8 @@
 </template>
 
 <script>
-// 导入操作 登录 的方法
-import { apiGetCode } from '@/api/au.js'
+// 导入 axios
+import axios from 'axios'
 
 export default {
   data () {
@@ -84,50 +82,41 @@ export default {
             trigger: 'onBlur'
           }
         ]
-      },
-      // 是否处于倒计时
-      isback: false,
-      // 倒计时的时长
-      time: 5,
-      // 定义倒计时的定时器
-      timer: null
+      }
     }
   },
   methods: {
     // 得到服务器中的验证码
-    async getCode () {
-      // 判断是否处于倒计时
-      if (this.isback) {
-        // 说明正倒计时
-        return
-      }
-      // 将倒计时状态开启
-      this.isback = true
-      // 让时间减减
-      this.timer = setInterval(() => {
-        this.time--
-        // 如果时间小于 0 就要停止定时器
-        if (this.time < 0) {
-          // 清除定时器
-          clearInterval(this.timer)
-          // 关闭倒计时的状态
-          this.isback = false
-          // 重置倒计时的时间
-          this.time = 5
-        }
-      }, 1000)
-
+    getCode () {
       // 校验手机号是否合法
-      await this.$refs.myform.validate('mobile')
-      // 添加加载动画
-      this.$toast.loading({
-        duration: 0, // 一直显示
-        message: '加载中', // 加载的文本
-        forbidClick: true // 禁止点击背景
-      })
-      const resCode = await apiGetCode(this.use.mobile)
-      console.log(resCode)
-      this.$toast.success(resCode.data)
+      this.$refs.myform
+        .validate('mobile')
+        .then(() => {
+          console.log('then')
+          // 添加加载动画
+          this.$toast.loading({
+            duration: 0, // 一直显示
+            message: '加载中', // 加载的文本
+            forbidClick: true // 禁止点击背景
+          })
+          axios({
+            url: 'http://localhost:1337/au/code',
+            method: 'POST',
+            data: {
+              mobile: this.use.mobile
+            }
+          }).then(res => {
+            // 得到验证码
+            console.log(res.data.data)
+            // 提示验证码
+            this.$toast.success(res.data.data)
+          })
+        })
+        .catch(error => {
+          console.log('catch')
+          // 打印校验的信息
+          this.$toast.fail(error.message)
+        })
     }
   }
 }
